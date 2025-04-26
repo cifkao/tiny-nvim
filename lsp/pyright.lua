@@ -5,12 +5,14 @@ return {
   on_attach = Lsp.on_attach,
   filetypes = { "python" },
   settings = {
+    pyright = {
+      disableOrganizeImports = true,
+    },
     python = {
       analysis = {
-        autoSearchPaths = true,
-        useLibraryCodeForTypes = true,
-        diagnosticMode = "openFilesOnly",
-      },
-    },
-  },
+        ignore = { "*" },
+        typeCheckingMode = "off",
+      }
+    }
+  }
 }
