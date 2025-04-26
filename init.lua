@@ -25,7 +25,7 @@ if vim.g.vscode then
   vim.api.nvim_exec_autocmds("User", { pattern = pattern, modeline = false })
 else
   -- Load the theme
-  require("kanagawa").load "wave"
+  require("tokyonight").load()
 
   local ts_server = vim.g.lsp_typescript_server or "ts_ls" -- "ts_ls" or "vtsls" for TypeScript
 
