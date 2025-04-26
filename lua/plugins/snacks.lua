@@ -1,14 +1,3 @@
-local logo = [[
-      ██╗████████╗    ███╗   ███╗ █████╗ ███╗   ██╗
-      ██║╚══██╔══╝    ████╗ ████║██╔══██╗████╗  ██║
-      ██║   ██║       ██╔████╔██║███████║██╔██╗ ██║
-      ██║   ██║       ██║╚██╔╝██║██╔══██║██║╚██╗██║
-      ██║   ██║       ██║ ╚═╝ ██║██║  ██║██║ ╚████║
-      ╚═╝   ╚═╝       ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝
-]]
-
-logo = string.rep("\n", 4) .. logo .. "\n\n"
-
 -- Terminal Mappings
 local function term_nav(dir)
   return function(self)
@@ -23,7 +12,7 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     optional = true,
-    opts = { ensure_installed = { "css", "latex", "norg", "scss", "typst", "vue", "svelte" } },
+    opts = { ensure_installed = { "css", "latex", "scss", "typst", "vue", "svelte" } },
   },
   -- Todo comments
   {
@@ -153,7 +142,6 @@ return {
       dashboard = {
         enabled = true,
         preset = {
-          header = logo,
           keys = {
             { icon = " ", key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
             { icon = " ", key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
@@ -173,14 +161,6 @@ return {
         sections = {
           { section = "header" },
           { icon = " ", title = "Keymaps", section = "keys", indent = 2, padding = 1 },
-          {
-            section = "terminal",
-            title = "Productsway.com",
-            icon = "©",
-            --  local user = hostname or vim.env.USER or "User"
-            --  local user = vim.fn.expand("$USER")
-            cmd = "echo Welcome back, " .. hostname .. "! | bunx cowsay --think",
-          },
           { section = "startup" },
         },
       },
@@ -221,7 +201,7 @@ return {
         enabled = true,
       },
       input = { enabled = true },
-      scroll = { enabled = true },
+      scroll = { enabled = false },
       notifier = {
         enabled = true,
         --- Available style: "compact"|"fancy"|"minimal"
