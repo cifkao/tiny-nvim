@@ -1,6 +1,95 @@
 local completion = vim.g.completion_mode or "blink" -- or 'native'
 
+local function deduplicate(list)
+  local seen = {}
+  local result = {}
+  for _, item in ipairs(list) do
+    if not seen[item] then
+      seen[item] = true
+      table.insert(result, item)
+    end
+  end
+  return result
+end
+
+
 return {
+  {
+    "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdate",
+    cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
+    keys = {
+      { "<c-space>", desc = "Increment Selection" },
+      { "<bs>", desc = "Decrement Selection", mode = "x" },
+    },
+    opts_extend = { "ensure_installed" },
+    config = function(_, opts)
+      if type(opts.ensure_installed) == "table" then
+        opts.ensure_installed = deduplicate(opts.ensure_installed)
+      end
+      require("nvim-treesitter.configs").setup(opts)
+    end,
+    opts = {
+      highlight = { enable = true },
+      indent = { enable = true, disable = { "python" } },
+      ensure_installed = {
+        "bash",
+        "c",
+        "diff",
+        "html",
+        "javascript",
+        "jsdoc",
+        "json",
+        "jsonc",
+        "lua",
+        "luadoc",
+        "luap",
+        "markdown",
+        "markdown_inline",
+        "printf",
+        "python",
+        "query",
+        "regex",
+        "toml",
+        "tsx",
+        "typescript",
+        "vim",
+        "vimdoc",
+        "xml",
+        "yaml",
+      },
+      incremental_selection = {
+        enable = true,
+        keymaps = {
+          init_selection = "<C-space>",
+          node_incremental = "<C-space>",
+          scope_incremental = false,
+          node_decremental = "<bs>",
+        },
+      },
+      textobjects = {
+        move = {
+          enable = true,
+          goto_next_start = { ["]f"] = "@function.outer", ["]c"] = "@class.outer", ["]a"] = "@parameter.inner" },
+          goto_next_end = { ["]F"] = "@function.outer", ["]C"] = "@class.outer", ["]A"] = "@parameter.inner" },
+          goto_previous_start = { ["[f"] = "@function.outer", ["[c"] = "@class.outer", ["[a"] = "@parameter.inner" },
+          goto_previous_end = { ["[F"] = "@function.outer", ["[C"] = "@class.outer", ["[A"] = "@parameter.inner" },
+        },
+        swap = {
+          enable = true,
+          swap_next = {
+            ["<M-]>a"] = "@parameter.inner",
+          },
+          swap_previous = {
+            ["<M-[>a"] = "@parameter.inner",
+          },
+        },
+      },
+    },
+  },
+  {
+    "nvim-treesitter/nvim-treesitter-textobjects",
+  },
   -- Setup Copilot
   {
     "github/copilot.vim",
@@ -92,6 +181,7 @@ return {
       -- See :h blink-cmp-config-keymap for defining your own keymap
       keymap = { preset = "enter" },
       completion = {
+        accept = { auto_brackets = { enabled = false } },
         -- Controls whether the documentation window will automatically show when selecting a completion item
         documentation = {
           auto_show = true,
@@ -352,11 +442,11 @@ return {
   },
   -- Learn those tips from LazyVim
   -- Auto pairs
-  {
-    "echasnovski/mini.pairs",
-    event = "VeryLazy",
-    opts = {},
-  },
+  -- {
+  --   "echasnovski/mini.pairs",
+  --   event = "VeryLazy",
+  --   opts = {},
+  -- },
   -- Extend and create a/i textobjects
   {
     "echasnovski/mini.ai",
