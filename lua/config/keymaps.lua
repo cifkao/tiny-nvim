@@ -1,3 +1,6 @@
+-- Prevent vim filetype plugins from setting keymaps
+vim.g.no_plugin_maps = true
+
 local map = vim.keymap.set
 
 -- Better up/down

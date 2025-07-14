@@ -18,10 +18,6 @@ return {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
-    keys = {
-      { "<c-space>", desc = "Increment Selection" },
-      { "<bs>", desc = "Decrement Selection", mode = "x" },
-    },
     opts_extend = { "ensure_installed" },
     config = function(_, opts)
       if type(opts.ensure_installed) == "table" then
@@ -31,7 +27,7 @@ return {
     end,
     opts = {
       highlight = { enable = true },
-      indent = { enable = true, disable = { "python" } },
+      indent = { enable = true },
       ensure_installed = {
         "bash",
         "c",
@@ -61,10 +57,10 @@ return {
       incremental_selection = {
         enable = true,
         keymaps = {
-          init_selection = "<C-space>",
-          node_incremental = "<C-space>",
+          init_selection = "<CR>",
+          node_incremental = "<CR>",
           scope_incremental = false,
-          node_decremental = "<bs>",
+          node_decremental = "<BS>",
         },
       },
       textobjects = {
@@ -91,6 +87,22 @@ return {
     "nvim-treesitter/nvim-treesitter-textobjects",
   },
   {
+    "nvim-treesitter/nvim-treesitter-context",
+    event = { "BufReadPre", "BufNewFile" },
+    opts = function()
+      local tsc = require("treesitter-context")
+      Snacks.toggle({
+        name = "Treesitter Context",
+        get = tsc.enabled,
+        set = function(state)
+          if state then
+            tsc.enable()
+          else
+            tsc.disable()
+          end
+        end,
+      }):map("<leader>ut")
+      return { mode = "cursor", max_lines = 3 }
     end,
   },
   -- Setup Copilot

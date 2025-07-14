@@ -30,13 +30,7 @@ return {
       go = { "goimports", "gofmt" },
       -- Install Ruff globally.
       -- uv tool install ruff@latest
-      python = function(bufnr)
-        if require("conform").get_formatter_info("ruff_format", bufnr).available then
-          return { "ruff_format" }
-        else
-          return { "isort", "black" }
-        end
-      end,
+      python = { "ruff_format", "ruff_fix" },
       -- Install prettier globally.
       -- npm install -g prettier@latest
       -- Install dprint globally.
