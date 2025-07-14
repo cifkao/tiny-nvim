@@ -90,45 +90,21 @@ return {
   {
     "nvim-treesitter/nvim-treesitter-textobjects",
   },
-  -- Setup Copilot
   {
-    "github/copilot.vim",
-    -- NOTE: Pin version to avoid breaking changes
-    version = "v1.42.0",
-    event = "VeryLazy",
-    config = function()
-      -- For copilot.vim
-      -- enable copilot for specific filetypes
-      vim.g.copilot_filetypes = {
-        ["TelescopePrompt"] = false,
-        ["grug-far"] = false,
-        ["grug-far-history"] = false,
-        ["copilot-chat"] = false,
-      }
-
-      -- Set to true to assume that copilot is already mapped
-      vim.g.copilot_assume_mapped = true
-      -- Set workspace folders
-      vim.g.copilot_workspace_folders = "~/Projects"
-
-      -- Setup keymaps
-      local keymap = vim.keymap.set
-      local opts = { silent = true }
-
-      -- Set <C-y> to accept copilot suggestion
-      keymap("i", "<C-y>", 'copilot#Accept("\\<CR>")', { expr = true, replace_keycodes = false })
-
-      -- Set <C-i> to accept line
-      keymap("i", "<C-i>", "<Plug>(copilot-accept-line)", opts)
-
-      -- Set <C-j> to next suggestion, <C-k> to previous suggestion
-      keymap("i", "<C-j>", "<Plug>(copilot-next)", opts)
-      keymap("i", "<C-k>", "<Plug>(copilot-previous)", opts)
-
-      -- Set <C-d> to dismiss suggestion
-      keymap("i", "<C-d>", "<Plug>(copilot-dismiss)", opts)
     end,
   },
+  -- Setup Copilot
+  -- {
+  --   "zbirenbaum/copilot.lua",
+  --   cmd = "Copilot",
+  --   event = "InsertEnter",
+  --   opts = {
+  --     suggestion = {
+  --       enabled = true,
+  --       auto_trigger = true,
+  --     },
+  --   },
+  -- },
   -- Autocomplete, refer to https://cmp.saghen.dev/#compared-to-built-in-completion for more information
   {
     "saghen/blink.cmp",
@@ -273,23 +249,23 @@ return {
     },
   },
   -- Support copilot as source
-  {
-    "saghen/blink.cmp",
-    dependencies = { "fang2hou/blink-copilot" },
-    opts = {
-      sources = {
-        default = { "copilot" },
-        providers = {
-          copilot = {
-            name = "copilot",
-            module = "blink-copilot",
-            score_offset = 100,
-            async = true,
-          },
-        },
-      },
-    },
-  },
+  -- {
+  --   "saghen/blink.cmp",
+  --   dependencies = { "fang2hou/blink-copilot" },
+  --   opts = {
+  --     sources = {
+  --       default = { "copilot" },
+  --       providers = {
+  --         copilot = {
+  --           name = "copilot",
+  --           module = "blink-copilot",
+  --           score_offset = 100,
+  --           async = true,
+  --         },
+  --       },
+  --     },
+  --   },
+  -- },
   -- Refactoring
   {
     "folke/which-key.nvim",

@@ -13,8 +13,7 @@ return {
     event = "VeryLazy",
     version = false,
     opts = {
-      provider = "copilot",
-      hints = { enabled = false }, -- Disable hints as I could trigger with <leader>a
+      provider = "claude",
     },
     build = "make",
     dependencies = {
