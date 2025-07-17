@@ -29,6 +29,7 @@ return {
           local git = MiniStatusline.section_git { trunc_width = 40 }
           local filename = MiniStatusline.section_filename { trunc_width = 140 }
           local diagnostics = MiniStatusline.section_diagnostics { trunc_width = 75 }
+
           return MiniStatusline.combine_groups {
             { hl = mode_hl, strings = { mode:upper() } },
             { hl = "MiniStatuslineDevinfo", strings = { git, diagnostics } },
@@ -114,7 +115,7 @@ return {
   },
   {
     "folke/noice.nvim",
-    enabled = false,
+    enabled = true,
     event = "VeryLazy",
     opts = {},
     dependencies = {
