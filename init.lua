@@ -1,3 +1,7 @@
+if vim.fn.has "nvim-0.12" == 0 then
+  vim.api.nvim_echo({ { "This config requires Neovim 0.12 or later; see README.", "ErrorMsg" } }, true, {})
+end
+
 require "config.options"
 
 -- Load project setting if available, e.g: .nvim-config.lua

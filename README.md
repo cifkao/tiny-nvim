@@ -1,125 +1,62 @@
-# Welcome to My Tiny Neovim 👋
+# nvim config
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](#)
-[![Twitter: jellydn](https://img.shields.io/twitter/follow/jellydn.svg?style=social)](https://twitter.com/jellydn)
-<a href="https://dotfyle.com/jellydn/tiny-nvim"><img src="https://dotfyle.com/jellydn/tiny-nvim/badges/plugins?style=flat" /></a>
-<a href="https://dotfyle.com/jellydn/tiny-nvim"><img src="https://dotfyle.com/jellydn/tiny-nvim/badges/leaderkey?style=flat" /></a>
-<a href="https://dotfyle.com/jellydn/tiny-nvim"><img src="https://dotfyle.com/jellydn/tiny-nvim/badges/plugin-manager?style=flat" /></a>
+Personal Neovim configuration, forked from [jellydn/tiny-nvim](https://github.com/jellydn/tiny-nvim):
+lazy.nvim, snacks.nvim, blink.cmp, native LSP (`lsp/*.lua`), nvim-treesitter (`main` branch) and
+LazyVim-style keymaps.
 
-> Slim Neovim config for 0.11+ with minimal plugins.
+The goal is that a fresh clone behaves the same on every Linux or macOS machine:
 
-[![Slim Neovim config for 0.11](https://i.gyazo.com/6e351d72c2f119f70dbc55d61e9452fd.png)](https://gyazo.com/6e351d72c2f119f70dbc55d61e9452fd)
+- Plugin versions are pinned by `lazy-lock.json`.
+- Treesitter parsers are built by the config itself; the `tree-sitter` CLI it needs is downloaded
+  into `~/.local/share/nvim/tree-sitter` on demand (version pinned in `lua/utils/treesitter.lua`).
+- Everything else is a prerequisite that the config checks and reports (`:checkhealth config`)
+  rather than installs.
 
-## Motivation
+## Requirements
 
-This configuration is a migration from [my-nvim-ide](https://github.com/jellydn/my-nvim-ide) with two main goals:
+- **Neovim 0.12 or later.** `scripts/install-neovim.sh` installs the pinned release into `~/.local`
+  without root; `brew install neovim` works as well.
+- **A C compiler** (`cc`), used to build treesitter parsers: `xcode-select --install` on macOS,
+  `gcc` on Linux.
+- `git`, `curl`, `tar`, `gzip`.
+- Optional: `rg`, `fd`, `lazygit`, `delta`, a [Nerd Font](https://www.nerdfonts.com/), and the LSP
+  servers you use (`pyright`, `ruff`, `gopls`, ...). A server whose binary is missing is simply not
+  started.
 
-1. **Leverage Neovim 0.11+ Built-in Features**:
+## Install
 
-   - Remove dependency on [`lspconfig`](https://github.com/neovim/nvim-lspconfig/pull/3659) by utilizing Neovim's built-in LSP support
-   - No need for the `mason.nvim` plugin; instead, use a shell [script](./scripts/install-tools.sh) to install necessary tools
-   - Experience faster startup times and reduced complexity
-   - Take advantage of the latest Neovim improvements
-
-2. **Optimize Plugin Selection**:
-   - Trim down the plugin list to only essential ones
-   - Use `blink.cmp` for completion instead of built-in completion for better UX
-   - Maintain a minimal yet powerful development environment
-
-The result is a faster, more maintainable configuration that still provides all the necessary features for modern development.
-
-[![IT Man - My Tiny Nvim (2025 version) for Neovim 0.11+](https://i.ytimg.com/vi/-N9QTQzEt0w/hqdefault.jpg)](https://www.youtube.com/watch?v=-N9QTQzEt0w)
-
-### 🏠 [Homepage](itman.fyi)
-
-## Quick Start
-
-### One-liner Installation (Recommended)
-
-```bash
-# Install with default app name (tiny-nvim)
-curl -s https://raw.githubusercontent.com/jellydn/tiny-nvim/main/install.sh | bash
-
-# Or install with custom app name
-curl -s https://raw.githubusercontent.com/jellydn/tiny-nvim/main/install.sh | bash -s -- --appname my_nvim
+```sh
+git clone git@github.com:cifkao/tiny-nvim.git ~/.config/nvim
+nvim
 ```
 
-This will:
+The first start installs the plugins at the locked versions and builds the parsers in the
+background. Run `:checkhealth config` afterwards (and `:checkhealth nvim-treesitter` for parser
+details).
 
-1. Backup your existing Neovim configuration (if any)
-2. Clone the repository
-3. Install all required tools
-4. Install all plugins in headless mode
-5. Set up your complete Neovim environment
+To do the same without opening the UI, e.g. from a provisioning script:
 
-After installation, you can start Neovim with:
-
-```bash
-# If using default app name
-NVIM_APPNAME=tiny-nvim nvim
-
-# If using custom app name
-NVIM_APPNAME=my_nvim nvim
+```sh
+nvim --headless "+Lazy! restore" +qa
 ```
 
-### Cleanup
+## Updating plugins
 
-To completely remove this configuration, run:
+`lazy-lock.json` is the source of truth, so update on one machine and replicate elsewhere:
 
-```bash
-# Replace APPNAME with your chosen name (tiny-nvim or custom name)
-rm -rf ~/.config/APPNAME
-rm -rf ~/.local/share/APPNAME
-rm -rf ~/.cache/APPNAME
-rm -rf ~/.local/state/APPNAME
-```
+1. `:Lazy update` on one machine, then check `:checkhealth config` and `:checkhealth nvim-treesitter`.
+2. Commit `lazy-lock.json`.
+3. On other machines, pull and run `:Lazy restore`.
 
-### Manual Installation
+`:Lazy sync` ignores the lockfile; avoid it. Bumping `nvim-treesitter` is the one update that can
+raise the required Neovim or `tree-sitter` CLI version; adjust `scripts/install-neovim.sh` and
+`lua/utils/treesitter.lua` accordingly.
 
-If you prefer to install manually:
+## Troubleshooting
 
-1. Clone this repository:
-
-```bash
-git clone https://github.com/jellydn/tiny-nvim.git ~/.config/tiny-nvim
-```
-
-2. Run the installation script to set up all required tools:
-
-```bash
-cd ~/.config/tiny-nvim
-./scripts/install-tools.sh
-```
-
-3. Launch Neovim with this configuration:
-
-```bash
-NVIM_APPNAME=tiny-nvim nvim
-```
-
-## Health Checks & Debugging
-
-After installation, run the following commands to ensure everything is set up correctly:
-
-1. Check overall Neovim health:
-
-```vim
-:checkhealth
-```
-
-2. Verify LSP configuration:
-
-```vim
-:check vim.lsp
-```
-
-3. For formatting issues, check conform.nvim status:
-
-```vim
-:ConformInfo
-```
-
-For more detailed debugging information, refer to [conform.nvim debugging guide](https://github.com/stevearc/conform.nvim/blob/master/doc/debugging.md#tools).
+- Parsers fail to load after upgrading Neovim (`ABI version mismatch`): `:TSUninstall all`, restart.
+- Parsers fail to build: `:checkhealth config` lists what is missing.
+- Formatting: `:ConformInfo`. LSP: `:checkhealth vim.lsp`.
 
 ## Features
 
@@ -675,90 +612,3 @@ Note that some plugins like `avante.nvim` will disable conflicting plugins (such
 
 </details>
 
-## Uninstall
-
-```sh
-  rm -rf ~/.config/nvim
-  rm -rf ~/.local/share/nvim
-  rm -rf ~/.cache/nvim
-  rm -rf ~/.local/state/nvim
-```
-
-# Tips
-
-<details>
-<summary>Click to expand helpful tips</summary>
-
-- Improve key repeat on Mac OSX, need to restart
-
-```sh
-defaults write NSGlobalDomain KeyRepeat -int 1
-defaults write NSGlobalDomain InitialKeyRepeat -int 14
-```
-
-- VSCode on Mac
-
-To enable key-repeating, execute the following in your Terminal, log out and back in, and then restart VS Code:
-
-```sh
-# For VS Code
-defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
-# For VS Code Insider
-defaults write com.microsoft.VSCodeInsiders ApplePressAndHoldEnabled -bool false
-# If necessary, reset global default
-defaults delete -g ApplePressAndHoldEnabled
-# For Cursor
-defaults write com.todesktop.230313mzl4w4u92 ApplePressAndHoldEnabled -bool false
-```
-
-Also increasing Key Repeat and Delay Until Repeat settings in System Preferences -> Keyboard.
-
-[![Key repeat rate](https://i.gyazo.com/e58be996275fe50bee31412ea5930017.png)](https://gyazo.com/e58be996275fe50bee31412ea5930017)
-
-- Disable `full stop with double-space` if you see the delay with `<space>-<space>`
-
-[![Which-key](https://i.gyazo.com/6403f6c57d2e54aca230589b2173eeb0.png)](https://gyazo.com/6403f6c57d2e54aca230589b2173eeb0)
-
-</details>
-
-## Resources
-
-<details>
-<summary>Click to expand learning resources</summary>
-
-- [What's New in Neovim 0.11](https://gpanders.com/blog/whats-new-in-neovim-0-11/): A detailed overview of the latest features and improvements in Neovim 0.11.
-- [Neovim 0.11 Built-in Completion Setup](https://gist.github.com/miroshQa/7c61292bc37070bb7606a29e07fe00e2): A comprehensive guide for setting up built-in completion in Neovim 0.11+.
-
-[![IT Man - LazyVim Power User Guide](https://i.ytimg.com/vi/jveM3hZs_oI/hqdefault.jpg)](https://www.youtube.com/watch?v=jveM3hZs_oI)
-
-[![IT Man - Talk #33 NeoVim as IDE [Vietnamese]](https://i.ytimg.com/vi/dFi8CzvqkNE/hqdefault.jpg)](https://www.youtube.com/watch?v=dFi8CzvqkNE)
-
-[![IT Man - Talk #35 #Neovim IDE for Web Developer](https://i.ytimg.com/vi/3EbgMJ-RcWY/hqdefault.jpg)](https://www.youtube.com/watch?v=3EbgMJ-RcWY)
-
-[![IT Man - Step-by-Step Guide: Integrating Copilot Chat with Neovim [Vietnamese]](https://i.ytimg.com/vi/By_CCai62JE/hqdefault.jpg)](https://www.youtube.com/watch?v=By_CCai62JE)
-
-[![IT Man - Power up your Neovim with Gen.nvim](https://i.ytimg.com/vi/2nt_qcchW_8/hqdefault.jpg)](https://www.youtube.com/watch?v=2nt_qcchW_8)
-
-[![IT Man - Boost Your Neovim Productivity with GitHub Copilot Chat](https://i.ytimg.com/vi/6oOPGaKCd_Q/hqdefault.jpg)](https://www.youtube.com/watch?v=6oOPGaKCd_Q)
-
-[![IT Man - Get to know GitHub Copilot Chat in #Neovim and be productive IMMEDIATELY](https://i.ytimg.com/vi/sSih4khcstc/hqdefault.jpg)](https://www.youtube.com/watch?v=sSih4khcstc)
-
-[![IT Man - Master Neovim with CopilotChat.nvim v3: Features, Demos, and Innovations](https://i.ytimg.com/vi/PfYnLcSVPh0/hqdefault.jpg)](https://www.youtube.com/watch?v=PfYnLcSVPh0)
-
-[![IT Man - Enhance Your Neovim Experience with LSP Plugins](https://i.ytimg.com/vi/JwWNIQgL4Fk/hqdefault.jpg)](https://www.youtube.com/watch?v=JwWNIQgL4Fk)
-
-[![IT Man - Bringing Zed AI Experience to Neovim with codecompanion.nvim](https://i.ytimg.com/vi/KbWI4ilHKv4/hqdefault.jpg)](https://www.youtube.com/watch?v=KbWI4ilHKv4)
-
-</details>
-
-## Author
-
-👤 **Dung Huynh Duc**
-
-- Website: https://productsway.com/
-- Twitter: [@jellydn](https://twitter.com/jellydn)
-- Github: [@jellydn](https://github.com/jellydn)
-
-## Show your support
-
-Give a ⭐️ if this project helped you!

@@ -1,24 +1,13 @@
 local completion = vim.g.completion_mode or "blink" -- or 'native'
 
-local function deduplicate(list)
-  local seen = {}
-  local result = {}
-  for _, item in ipairs(list) do
-    if not seen[item] then
-      seen[item] = true
-      table.insert(result, item)
-    end
-  end
-  return result
-end
-
-
 return {
   {
     "nvim-treesitter/nvim-treesitter",
     branch = "main",
     lazy = false, -- the main branch does not support lazy-loading
-    build = ":TSUpdate",
+    build = function()
+      require("utils.treesitter").update()
+    end,
     opts_extend = { "ensure_installed" },
     opts = {
       -- Parsers to install; language files extend this list via `opts_extend`.
@@ -29,8 +18,7 @@ return {
         "html",
         "javascript",
         "jsdoc",
-        "json",
-        "jsonc",
+        "json", -- also used for jsonc
         "lua",
         "luadoc",
         "luap",
@@ -48,25 +36,34 @@ return {
         "xml",
         "yaml",
       },
-      -- Filetypes for which treesitter indentation is disabled (it is experimental).
-      indent_disable = {},
+      -- Per-feature `{ enable = boolean, disable = lang[] }`.
+      highlight = { enable = true },
+      indent = { enable = true }, -- experimental on the main branch
     },
     config = function(_, opts)
       local ts = require "nvim-treesitter"
       ts.setup {}
 
-      local ensure_installed = deduplicate(opts.ensure_installed or {})
       local available = ts.get_available()
-      local to_install = vim.tbl_filter(function(lang)
-        if vim.tbl_contains(available, lang) then
-          return true
+      local installed = ts.get_installed "parsers"
+      local missing, seen = {}, {}
+      for _, lang in ipairs(opts.ensure_installed) do
+        if seen[lang] then
+          -- extended lists overlap; skip
+        elseif not vim.tbl_contains(available, lang) then
+          vim.notify("nvim-treesitter: unknown parser '" .. lang .. "'", vim.log.levels.WARN)
+        elseif not vim.tbl_contains(installed, lang) then
+          table.insert(missing, lang)
         end
-        vim.notify("nvim-treesitter: unknown parser '" .. lang .. "'", vim.log.levels.WARN)
-        return false
-      end, ensure_installed)
-      ts.install(to_install)
+        seen[lang] = true
+      end
+      require("utils.treesitter").install(missing)
 
-      -- Enable highlighting and indentation for every buffer that has a parser.
+      local function enabled(feature, lang)
+        local f = opts[feature] or {}
+        return f.enable ~= false and not vim.tbl_contains(f.disable or {}, lang)
+      end
+
       vim.api.nvim_create_autocmd("FileType", {
         group = vim.api.nvim_create_augroup("treesitter_enable", { clear = true }),
         callback = function(ev)
@@ -74,8 +71,10 @@ return {
           if not lang or not vim.treesitter.language.add(lang) then
             return
           end
-          pcall(vim.treesitter.start, ev.buf, lang)
-          if not vim.tbl_contains(opts.indent_disable, ev.match) then
+          if enabled("highlight", lang) then
+            pcall(vim.treesitter.start, ev.buf, lang)
+          end
+          if enabled("indent", lang) then
             vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
           end
         end,
@@ -105,6 +104,9 @@ return {
 
       local function map_move(lhs, fn, query, desc)
         vim.keymap.set(modes, lhs, function()
+          if vim.wo.diff and lhs:find "[cC]" then
+            return vim.cmd("normal! " .. lhs) -- keep ]c/[c as "next/prev change" in diff mode
+          end
           move[fn](query, "textobjects")
         end, { desc = desc })
       end
@@ -247,6 +249,8 @@ return {
       signature = {
         enabled = false,
       },
+      -- Fall back to the Lua matcher silently when the prebuilt binary cannot be downloaded
+      fuzzy = { implementation = "prefer_rust" },
       appearance = {
         -- Sets the fallback highlight groups to nvim-cmp's highlight groups
         -- Useful for when your theme doesn't support blink.cmp
