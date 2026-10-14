@@ -12,7 +12,7 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     optional = true,
-    opts = { ensure_installed = { "css", "latex", "scss", "typst", "vue", "svelte" } },
+    opts = { ensure_installed = { "css", "scss", "typst", "vue", "svelte" } },
   },
   -- Todo comments
   {

@@ -16,18 +16,12 @@ end
 return {
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "main",
+    lazy = false, -- the main branch does not support lazy-loading
     build = ":TSUpdate",
-    cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
     opts_extend = { "ensure_installed" },
-    config = function(_, opts)
-      if type(opts.ensure_installed) == "table" then
-        opts.ensure_installed = deduplicate(opts.ensure_installed)
-      end
-      require("nvim-treesitter.configs").setup(opts)
-    end,
     opts = {
-      highlight = { enable = true },
-      indent = { enable = true },
+      -- Parsers to install; language files extend this list via `opts_extend`.
       ensure_installed = {
         "bash",
         "c",
@@ -54,37 +48,87 @@ return {
         "xml",
         "yaml",
       },
-      incremental_selection = {
-        enable = true,
-        keymaps = {
-          init_selection = "<CR>",
-          node_incremental = "<CR>",
-          scope_incremental = false,
-          node_decremental = "<BS>",
-        },
-      },
-      textobjects = {
-        move = {
-          enable = true,
-          goto_next_start = { ["]f"] = "@function.outer", ["]c"] = "@class.outer", ["]a"] = "@parameter.inner" },
-          goto_next_end = { ["]F"] = "@function.outer", ["]C"] = "@class.outer", ["]A"] = "@parameter.inner" },
-          goto_previous_start = { ["[f"] = "@function.outer", ["[c"] = "@class.outer", ["[a"] = "@parameter.inner" },
-          goto_previous_end = { ["[F"] = "@function.outer", ["[C"] = "@class.outer", ["[A"] = "@parameter.inner" },
-        },
-        swap = {
-          enable = true,
-          swap_next = {
-            ["<M-]>a"] = "@parameter.inner",
-          },
-          swap_previous = {
-            ["<M-[>a"] = "@parameter.inner",
-          },
-        },
-      },
+      -- Filetypes for which treesitter indentation is disabled (it is experimental).
+      indent_disable = {},
     },
+    config = function(_, opts)
+      local ts = require "nvim-treesitter"
+      ts.setup {}
+
+      local ensure_installed = deduplicate(opts.ensure_installed or {})
+      local available = ts.get_available()
+      local to_install = vim.tbl_filter(function(lang)
+        if vim.tbl_contains(available, lang) then
+          return true
+        end
+        vim.notify("nvim-treesitter: unknown parser '" .. lang .. "'", vim.log.levels.WARN)
+        return false
+      end, ensure_installed)
+      ts.install(to_install)
+
+      -- Enable highlighting and indentation for every buffer that has a parser.
+      vim.api.nvim_create_autocmd("FileType", {
+        group = vim.api.nvim_create_augroup("treesitter_enable", { clear = true }),
+        callback = function(ev)
+          local lang = vim.treesitter.language.get_lang(ev.match)
+          if not lang or not vim.treesitter.language.add(lang) then
+            return
+          end
+          pcall(vim.treesitter.start, ev.buf, lang)
+          if not vim.tbl_contains(opts.indent_disable, ev.match) then
+            vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          end
+        end,
+      })
+
+      -- Incremental selection: <CR> to expand to the enclosing node, <BS> to shrink.
+      -- (The main branch no longer ships this module.)
+      local selection = require "utils.treesitter-selection"
+      vim.keymap.set("n", "<CR>", selection.init, { desc = "Treesitter: start incremental selection" })
+      vim.keymap.set("x", "<CR>", selection.increment, { desc = "Treesitter: expand selection" })
+      vim.keymap.set("x", "<BS>", selection.decrement, { desc = "Treesitter: shrink selection" })
+    end,
   },
   {
     "nvim-treesitter/nvim-treesitter-textobjects",
+    branch = "main",
+    event = { "BufReadPost", "BufNewFile" },
+    opts = {
+      select = { lookahead = true },
+      move = { set_jumps = true },
+    },
+    config = function(_, opts)
+      require("nvim-treesitter-textobjects").setup(opts)
+      local move = require "nvim-treesitter-textobjects.move"
+      local swap = require "nvim-treesitter-textobjects.swap"
+      local modes = { "n", "x", "o" }
+
+      local function map_move(lhs, fn, query, desc)
+        vim.keymap.set(modes, lhs, function()
+          move[fn](query, "textobjects")
+        end, { desc = desc })
+      end
+
+      map_move("]f", "goto_next_start", "@function.outer", "Next function start")
+      map_move("]c", "goto_next_start", "@class.outer", "Next class start")
+      map_move("]a", "goto_next_start", "@parameter.inner", "Next parameter start")
+      map_move("]F", "goto_next_end", "@function.outer", "Next function end")
+      map_move("]C", "goto_next_end", "@class.outer", "Next class end")
+      map_move("]A", "goto_next_end", "@parameter.inner", "Next parameter end")
+      map_move("[f", "goto_previous_start", "@function.outer", "Previous function start")
+      map_move("[c", "goto_previous_start", "@class.outer", "Previous class start")
+      map_move("[a", "goto_previous_start", "@parameter.inner", "Previous parameter start")
+      map_move("[F", "goto_previous_end", "@function.outer", "Previous function end")
+      map_move("[C", "goto_previous_end", "@class.outer", "Previous class end")
+      map_move("[A", "goto_previous_end", "@parameter.inner", "Previous parameter end")
+
+      vim.keymap.set("n", "<M-]>a", function()
+        swap.swap_next "@parameter.inner"
+      end, { desc = "Swap with next parameter" })
+      vim.keymap.set("n", "<M-[>a", function()
+        swap.swap_previous "@parameter.inner"
+      end, { desc = "Swap with previous parameter" })
+    end,
   },
   {
     "nvim-treesitter/nvim-treesitter-context",
